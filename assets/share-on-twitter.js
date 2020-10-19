@@ -18,10 +18,4 @@ jQuery( document ).ready( function ( $ ) {
 			button.closest( '.description' ).remove();
 		} );
 	} );
-
-	$( '.settings_page_share-on-twitter .button-reset-settings' ).click( function( e ) {
-		if ( ! confirm( share_on_twitter_obj.message ) ) {
-			e.preventDefault();
-		}
-	} );
 } );
