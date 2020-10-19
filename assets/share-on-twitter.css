@@ -1,0 +1,11 @@
+#share-on-twitter .description {
+	margin: 1em 0 1px;
+}
+
+#share-on-twitter .url .ellipsis::after {
+	content: "…";
+}
+
+#share-on-twitter .unlink {
+	color: #a00;
+}
