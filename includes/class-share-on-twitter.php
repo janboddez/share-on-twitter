@@ -73,7 +73,6 @@ class Share_On_Twitter {
 	 */
 	public function register() {
 		add_action( 'plugins_loaded', array( $this, 'load_textdomain' ) );
-		add_action( 'share_on_twitter_verify_token', array( $this->options_handler, 'cron_verify_token' ) );
 	}
 
 	/**
