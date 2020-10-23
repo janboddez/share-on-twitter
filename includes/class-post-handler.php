@@ -315,6 +315,13 @@ class Post_Handler {
 			}
 		}
 
+		$connection = new TwitterOAuth(
+			$this->options['twitter_api_key'],
+			$this->options['twitter_api_secret'],
+			$this->options['twitter_access_token'],
+			$this->options['twitter_access_token_secret']
+		);
+
 		if ( ! empty( $media ) ) {
 			// Loop through the resulting image IDs.
 			for ( $i = 0; $i < 4; $i++ ) {
@@ -330,13 +337,6 @@ class Post_Handler {
 		if ( ! empty( $media_ids ) ) {
 			$args['media_ids'] = implode( ',', $media_ids );
 		}
-
-		$connection = new TwitterOAuth(
-			$this->options['twitter_api_key'],
-			$this->options['twitter_api_secret'],
-			$this->options['twitter_access_token'],
-			$this->options['twitter_access_token_secret']
-		);
 
 		$response = $connection->post(
 			'statuses/update',
@@ -393,6 +393,18 @@ class Post_Handler {
 		);
 
 		if ( ! empty( $response->media_id_string ) ) {
+			// Add alt text.
+			// Looks like this isn't supported, yet, by TwitterOAuth.
+			// $alt = get_post_meta( $image_id, '_wp_attachment_image_alt', true );
+			//
+			// $connection->post(
+			// 	'media/metadata/create',
+			// 	array(
+			// 		'media_id' => $response->media_id_string,
+			// 		'alt_text' => array( 'text' => mb_substr( $alt, 0, 1000 ) ),
+			// 	)
+			// );
+
 			return $response->media_id_string;
 		}
 
