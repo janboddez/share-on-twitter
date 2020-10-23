@@ -1,6 +1,6 @@
 <?php
 /**
- * Handles posting to Mastodon and the like.
+ * Handles posting to Twitter.
  *
  * @package Share_On_Twitter
  */
@@ -130,7 +130,7 @@ class Post_Handler {
 			wp_die();
 		}
 
-		// Have WordPress forget the Mastodon URL.
+		// Have WordPress forget the Tweet URL.
 		if ( '' !== get_post_meta( intval( $_POST['post_id'] ), '_share_on_twitter_url', true ) ) {
 			delete_post_meta( intval( $_POST['post_id'] ), '_share_on_twitter_url' );
 		}
@@ -281,8 +281,10 @@ class Post_Handler {
 
 		if ( apply_filters( 'share_on_twitter_cutoff', false ) ) {
 			// May render hashtags or URLs, or unfiltered HTML, at the very end
-			// of a toot unusable. Also, Mastodon may not even use a multibyte
-			// check. To do: test better?
+			// of a tweet unusable. Also, Twitter counts multibyte characters
+			// as multiple characters, so resulting strings may still be too
+			// long. Yet, using `substr()` could "break" Unicode characters,
+			// too, so ...
 			$args['status'] = mb_substr( $args['status'], 0, 278, get_bloginfo( 'charset' ) ) . ' …';
 		}
 
