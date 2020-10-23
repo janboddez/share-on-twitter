@@ -323,8 +323,14 @@ class Post_Handler {
 		);
 
 		if ( ! empty( $media ) ) {
+			$count = count( $media );
+			
+			if ( $count > 4 ) {
+				$count = 4;
+			}
+
 			// Loop through the resulting image IDs.
-			for ( $i = 0; $i < 4; $i++ ) {
+			for ( $i = 0; $i < $count; $i++ ) {
 				$media_id = $this->upload_image( $media[ $i ], $connection );
 
 				if ( ! empty( $media_id ) ) {
