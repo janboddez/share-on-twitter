@@ -37,4 +37,6 @@ Thumbs.db
 svn/
 
 vendor/
+!build/vendor/
 .phpunit.result.cache
+
