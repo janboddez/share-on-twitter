@@ -95,7 +95,7 @@ class Post_Handler {
 			$display_url .= '<span class="ellipsis">' . substr( $url_parts['host'] . $url_parts['path'], 0, 20 ) . '</span><span class="screen-reader-text">' . substr( $url_parts['host'] . $url_parts['path'], 20 ) . '</span>';
 			?>
 			<p class="description">
-				<?php /* translators: toot URL */ ?>
+				<?php /* translators: Tweet URL */ ?>
 				<?php printf( esc_html__( 'Shared at %s', 'share-on-twitter' ), '<a class="url" href="' . esc_url( $url ) . '">' . $display_url . '</a>' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				<?php /* translators: "unlink" link text */ ?>
 				<a href="#" class="unlink"><?php esc_html_e( 'Unlink', 'share-on-twitter' ); ?></a>
@@ -164,8 +164,8 @@ class Post_Handler {
 		}
 
 		// Enqueue CSS and JS.
-		wp_enqueue_style( 'share-on-twitter', plugins_url( '/assets/share-on-twitter.css', dirname( __FILE__ ) ), array(), '0.6.1' );
-		wp_enqueue_script( 'share-on-twitter', plugins_url( '/assets/share-on-twitter.js', dirname( __FILE__ ) ), array( 'jquery' ), '0.6.1', false );
+		wp_enqueue_style( 'share-on-twitter', plugins_url( '/assets/share-on-twitter.css', dirname( __FILE__ ) ), array(), '0.1.0' );
+		wp_enqueue_script( 'share-on-twitter', plugins_url( '/assets/share-on-twitter.js', dirname( __FILE__ ) ), array( 'jquery' ), '0.1.0', false );
 		wp_localize_script(
 			'share-on-twitter',
 			'share_on_twitter_obj',
@@ -236,7 +236,7 @@ class Post_Handler {
 		}
 
 		if ( '' !== get_post_meta( $post->ID, '_share_on_twitter_url', true ) ) {
-			// Prevent duplicate toots.
+			// Prevent duplicate Tweets.
 			return;
 		}
 
@@ -324,7 +324,7 @@ class Post_Handler {
 
 		if ( ! empty( $media ) ) {
 			$count = count( $media );
-			
+
 			if ( $count > 4 ) {
 				$count = 4;
 			}
