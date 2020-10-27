@@ -1,14 +1,15 @@
 <?php
 /**
- * Plugin Name: Share on Twitter
- * Description: Easily share WordPress posts on Twitter.
- * Plugin URI:  https://jan.boddez.net/wordpress/share-on-twitter
- * Author:      Jan Boddez
- * Author URI:  https://jan.boddez.net/
- * License: GNU General Public License v3
- * License URI: http://www.gnu.org/licenses/gpl-3.0.html
- * Text Domain: share-on-twitter
- * Version:     0.1.0
+ * Plugin Name:       Share on Twitter
+ * Description:       Easily share WordPress posts on Twitter.
+ * Plugin URI:        https://jan.boddez.net/wordpress/share-on-twitter
+ * GitHub Plugin URI: https://github.com/janboddez/share-on-pixelfed
+ * Author:            Jan Boddez
+ * Author URI:        https://jan.boddez.net/
+ * License: GNU       General Public License v3
+ * License URI:       http://www.gnu.org/licenses/gpl-3.0.html
+ * Text Domain:       share-on-twitter
+ * Version:           0.1.0
  *
  * @author  Jan Boddez <jan@janboddez.be>
  * @license http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0
