@@ -3,7 +3,7 @@
  * Plugin Name:       Share on Twitter
  * Description:       Easily share WordPress posts on Twitter.
  * Plugin URI:        https://jan.boddez.net/wordpress/share-on-twitter
- * GitHub Plugin URI: https://github.com/janboddez/share-on-pixelfed
+ * GitHub Plugin URI: https://github.com/janboddez/share-on-twitter
  * Author:            Jan Boddez
  * Author URI:        https://jan.boddez.net/
  * License: GNU       General Public License v3
