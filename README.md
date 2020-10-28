@@ -7,4 +7,4 @@ It does not, however, automatically register itself as a Twitter client when it 
 
 While this is tedious, it's also the only way. Twitter requires client API keys are kept private, which means they can't be shipped as part of an open-source application.
 
-By default, Tweets contain only a title and permalink, but they can be fully customized using the various filter hooks. Full-text status updates, automatical tagging, or entire Tweet threads: everything's possible.
+By default, Tweets contain only a title and permalink, but they can be fully customized using the various filter hooks. Automatic tagging, full-text status updates, or entire Tweet threads: everything's possible.
