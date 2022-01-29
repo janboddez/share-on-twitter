@@ -23,7 +23,7 @@ class Request
      */
     public function __construct(string $httpMethod, string $httpUrl, ?array $parameters = [])
     {
-        $parameters = \array_merge(\Share_On_Twitter\Abraham\TwitterOAuth\Util::parseParameters(\parse_url($httpUrl, \PHP_URL_QUERY)), $parameters);
+        $parameters = \array_merge(Util::parseParameters(\parse_url($httpUrl, \PHP_URL_QUERY)), $parameters);
         $this->parameters = $parameters;
         $this->httpMethod = $httpMethod;
         $this->httpUrl = $httpUrl;
@@ -39,9 +39,9 @@ class Request
      *
      * @return Request
      */
-    public static function fromConsumerAndToken(\Share_On_Twitter\Abraham\TwitterOAuth\Consumer $consumer, \Share_On_Twitter\Abraham\TwitterOAuth\Token $token = null, string $httpMethod, string $httpUrl, array $parameters = [], $json = \false)
+    public static function fromConsumerAndToken(Consumer $consumer, Token $token = null, string $httpMethod, string $httpUrl, array $parameters = [], $json = \false)
     {
-        $defaults = ['oauth_version' => \Share_On_Twitter\Abraham\TwitterOAuth\Request::$version, 'oauth_nonce' => \Share_On_Twitter\Abraham\TwitterOAuth\Request::generateNonce(), 'oauth_timestamp' => \time(), 'oauth_consumer_key' => $consumer->key];
+        $defaults = ['oauth_version' => Request::$version, 'oauth_nonce' => Request::generateNonce(), 'oauth_timestamp' => \time(), 'oauth_consumer_key' => $consumer->key];
         if (null !== $token) {
             $defaults['oauth_token'] = $token->key;
         }
@@ -52,7 +52,7 @@ class Request
         } else {
             $parameters = \array_merge($defaults, $parameters);
         }
-        return new \Share_On_Twitter\Abraham\TwitterOAuth\Request($httpMethod, $httpUrl, $parameters);
+        return new Request($httpMethod, $httpUrl, $parameters);
     }
     /**
      * @param string $name
@@ -99,7 +99,7 @@ class Request
         if (isset($params['oauth_signature'])) {
             unset($params['oauth_signature']);
         }
-        return \Share_On_Twitter\Abraham\TwitterOAuth\Util::buildHttpQuery($params);
+        return Util::buildHttpQuery($params);
     }
     /**
      * Returns the base string of this request
@@ -113,7 +113,7 @@ class Request
     public function getSignatureBaseString() : string
     {
         $parts = [$this->getNormalizedHttpMethod(), $this->getNormalizedHttpUrl(), $this->getSignableParameters()];
-        $parts = \Share_On_Twitter\Abraham\TwitterOAuth\Util::urlencodeRfc3986($parts);
+        $parts = Util::urlencodeRfc3986($parts);
         return \implode('&', $parts);
     }
     /**
@@ -160,7 +160,7 @@ class Request
      */
     public function toPostdata() : string
     {
-        return \Share_On_Twitter\Abraham\TwitterOAuth\Util::buildHttpQuery($this->parameters);
+        return Util::buildHttpQuery($this->parameters);
     }
     /**
      * Builds the Authorization: header
@@ -177,10 +177,10 @@ class Request
                 continue;
             }
             if (\is_array($v)) {
-                throw new \Share_On_Twitter\Abraham\TwitterOAuth\TwitterOAuthException('Arrays not supported in headers');
+                throw new TwitterOAuthException('Arrays not supported in headers');
             }
             $out .= $first ? ' ' : ', ';
-            $out .= \Share_On_Twitter\Abraham\TwitterOAuth\Util::urlencodeRfc3986($k) . '="' . \Share_On_Twitter\Abraham\TwitterOAuth\Util::urlencodeRfc3986($v) . '"';
+            $out .= Util::urlencodeRfc3986($k) . '="' . Util::urlencodeRfc3986($v) . '"';
             $first = \false;
         }
         return $out;
@@ -197,7 +197,7 @@ class Request
      * @param Consumer        $consumer
      * @param Token           $token
      */
-    public function signRequest(\Share_On_Twitter\Abraham\TwitterOAuth\SignatureMethod $signatureMethod, \Share_On_Twitter\Abraham\TwitterOAuth\Consumer $consumer, \Share_On_Twitter\Abraham\TwitterOAuth\Token $token = null)
+    public function signRequest(SignatureMethod $signatureMethod, Consumer $consumer, Token $token = null)
     {
         $this->setParameter('oauth_signature_method', $signatureMethod->getName());
         $signature = $this->buildSignature($signatureMethod, $consumer, $token);
@@ -210,7 +210,7 @@ class Request
      *
      * @return string
      */
-    public function buildSignature(\Share_On_Twitter\Abraham\TwitterOAuth\SignatureMethod $signatureMethod, \Share_On_Twitter\Abraham\TwitterOAuth\Consumer $consumer, \Share_On_Twitter\Abraham\TwitterOAuth\Token $token = null) : string
+    public function buildSignature(SignatureMethod $signatureMethod, Consumer $consumer, Token $token = null) : string
     {
         return $signatureMethod->buildSignature($this, $consumer, $token);
     }

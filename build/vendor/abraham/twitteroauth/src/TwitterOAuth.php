@@ -15,9 +15,8 @@ use Share_On_Twitter\Composer\CaBundle\CaBundle;
  *
  * @author Abraham Williams <abraham@abrah.am>
  */
-class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
+class TwitterOAuth extends Config
 {
-    private const API_VERSION = '1.1';
     private const API_HOST = 'https://api.twitter.com';
     private const UPLOAD_HOST = 'https://upload.twitter.com';
     /** @var Response details about the result of the last request */
@@ -43,8 +42,8 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
     public function __construct(string $consumerKey, string $consumerSecret, ?string $oauthToken = null, ?string $oauthTokenSecret = null)
     {
         $this->resetLastResponse();
-        $this->signatureMethod = new \Share_On_Twitter\Abraham\TwitterOAuth\HmacSha1();
-        $this->consumer = new \Share_On_Twitter\Abraham\TwitterOAuth\Consumer($consumerKey, $consumerSecret);
+        $this->signatureMethod = new HmacSha1();
+        $this->consumer = new Consumer($consumerKey, $consumerSecret);
         if (!empty($oauthToken) && !empty($oauthTokenSecret)) {
             $this->setOauthToken($oauthToken, $oauthTokenSecret);
         }
@@ -58,7 +57,7 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
      */
     public function setOauthToken(string $oauthToken, string $oauthTokenSecret) : void
     {
-        $this->token = new \Share_On_Twitter\Abraham\TwitterOAuth\Token($oauthToken, $oauthTokenSecret);
+        $this->token = new Token($oauthToken, $oauthTokenSecret);
         $this->bearer = null;
     }
     /**
@@ -102,7 +101,7 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
      */
     public function resetLastResponse() : void
     {
-        $this->response = new \Share_On_Twitter\Abraham\TwitterOAuth\Response();
+        $this->response = new Response();
     }
     /**
      * Resets the attempts number.
@@ -152,7 +151,7 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
         $url = \sprintf('%s/%s', self::API_HOST, $path);
         $result = $this->oAuthRequest($url, 'POST', $parameters);
         if ($this->getLastHttpCode() != 200) {
-            throw new \Share_On_Twitter\Abraham\TwitterOAuth\TwitterOAuthException($result);
+            throw new TwitterOAuthException($result);
         }
         \parse_str($result, $response);
         $this->response->setBody($response);
@@ -172,10 +171,10 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
         $this->resetLastResponse();
         $this->response->setApiPath($path);
         $url = \sprintf('%s/%s', self::API_HOST, $path);
-        $request = \Share_On_Twitter\Abraham\TwitterOAuth\Request::fromConsumerAndToken($this->consumer, $this->token, $method, $url, $parameters);
+        $request = Request::fromConsumerAndToken($this->consumer, $this->token, $method, $url, $parameters);
         $authorization = 'Authorization: Basic ' . $this->encodeAppAuthorization($this->consumer);
         $result = $this->request($request->getNormalizedHttpUrl(), $method, $authorization, $parameters);
-        $response = \Share_On_Twitter\Abraham\TwitterOAuth\Util\JsonDecoder::decode($result, $this->decodeJsonAsArray);
+        $response = JsonDecoder::decode($result, $this->decodeJsonAsArray);
         $this->response->setBody($response);
         return $response;
     }
@@ -221,12 +220,13 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
      *
      * @param string $path
      * @param array  $parameters
+     * @param bool   $json
      *
      * @return array|object
      */
-    public function put(string $path, array $parameters = [])
+    public function put(string $path, array $parameters = [], bool $json = \false)
     {
-        return $this->http('PUT', self::API_HOST, $path, $parameters, \false);
+        return $this->http('PUT', self::API_HOST, $path, $parameters, $json);
     }
     /**
      * Upload media to upload.twitter.com.
@@ -327,6 +327,15 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
         return $parameters;
     }
     /**
+     * Get URL extension for current API Version.
+     *
+     * @return string
+     */
+    private function extension()
+    {
+        return ['1.1' => '.json', '2' => ''][$this->apiVersion];
+    }
+    /**
      * @param string $method
      * @param string $host
      * @param string $path
@@ -339,12 +348,25 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
     {
         $this->resetLastResponse();
         $this->resetAttemptsNumber();
-        $url = \sprintf('%s/%s/%s.json', $host, self::API_VERSION, $path);
         $this->response->setApiPath($path);
         if (!$json) {
             $parameters = $this->cleanUpParameters($parameters);
         }
-        return $this->makeRequests($url, $method, $parameters, $json);
+        return $this->makeRequests($this->apiUrl($host, $path), $method, $parameters, $json);
+    }
+    /**
+     * Generate API URL.
+     *
+     * Overriding this function is not supported and may cause unintended issues.
+     *
+     * @param string $host
+     * @param string $path
+     *
+     * @return string
+     */
+    protected function apiUrl(string $host, string $path)
+    {
+        return \sprintf('%s/%s/%s%s', $host, $this->apiVersion, $path, $this->extension());
     }
     /**
      *
@@ -363,7 +385,7 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
         do {
             $this->sleepIfNeeded();
             $result = $this->oAuthRequest($url, $method, $parameters, $json);
-            $response = \Share_On_Twitter\Abraham\TwitterOAuth\Util\JsonDecoder::decode($result, $this->decodeJsonAsArray);
+            $response = JsonDecoder::decode($result, $this->decodeJsonAsArray);
             $this->response->setBody($response);
             $this->attempts++;
             // Retry up to our $maxRetries number if we get errors greater than 500 (over capacity etc)
@@ -392,7 +414,7 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
      */
     private function oAuthRequest(string $url, string $method, array $parameters, bool $json = \false)
     {
-        $request = \Share_On_Twitter\Abraham\TwitterOAuth\Request::fromConsumerAndToken($this->consumer, $this->token, $method, $url, $parameters, $json);
+        $request = Request::fromConsumerAndToken($this->consumer, $this->token, $method, $url, $parameters, $json);
         if (\array_key_exists('oauth_callback', $parameters)) {
             // Twitter doesn't like oauth_callback as a parameter.
             unset($parameters['oauth_callback']);
@@ -417,7 +439,7 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
      */
     private function curlOptions() : array
     {
-        $bundlePath = \Share_On_Twitter\Composer\CaBundle\CaBundle::getSystemCaRootBundlePath();
+        $bundlePath = CaBundle::getSystemCaRootBundlePath();
         $options = [
             // CURLOPT_VERBOSE => true,
             \CURLOPT_CONNECTTIMEOUT => $this->connectionTimeout,
@@ -463,22 +485,18 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
                 break;
             case 'POST':
                 $options[\CURLOPT_POST] = \true;
-                if ($json) {
-                    $options[\CURLOPT_HTTPHEADER][] = 'Content-type: application/json';
-                    $options[\CURLOPT_POSTFIELDS] = \json_encode($postfields);
-                } else {
-                    $options[\CURLOPT_POSTFIELDS] = \Share_On_Twitter\Abraham\TwitterOAuth\Util::buildHttpQuery($postfields);
-                }
+                $options = $this->setPostfieldsOptions($options, $postfields, $json);
                 break;
             case 'DELETE':
                 $options[\CURLOPT_CUSTOMREQUEST] = 'DELETE';
                 break;
             case 'PUT':
                 $options[\CURLOPT_CUSTOMREQUEST] = 'PUT';
+                $options = $this->setPostfieldsOptions($options, $postfields, $json);
                 break;
         }
         if (\in_array($method, ['GET', 'PUT', 'DELETE']) && !empty($postfields)) {
-            $options[\CURLOPT_URL] .= '?' . \Share_On_Twitter\Abraham\TwitterOAuth\Util::buildHttpQuery($postfields);
+            $options[\CURLOPT_URL] .= '?' . Util::buildHttpQuery($postfields);
         }
         $curlHandle = \curl_init();
         \curl_setopt_array($curlHandle, $options);
@@ -488,7 +506,7 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
             $error = \curl_error($curlHandle);
             $errorNo = \curl_errno($curlHandle);
             \curl_close($curlHandle);
-            throw new \Share_On_Twitter\Abraham\TwitterOAuth\TwitterOAuthException($error, $errorNo);
+            throw new TwitterOAuthException($error, $errorNo);
         }
         $this->response->setHttpCode(\curl_getinfo($curlHandle, \CURLINFO_HTTP_CODE));
         $parts = \explode("\r\n\r\n", $response);
@@ -510,7 +528,7 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
         $headers = [];
         foreach (\explode("\r\n", $header) as $line) {
             if (\strpos($line, ':') !== \false) {
-                list($key, $value) = \explode(': ', $line);
+                [$key, $value] = \explode(': ', $line);
                 $key = \str_replace('-', '_', \strtolower($key));
                 $headers[$key] = \trim($value);
             }
@@ -524,7 +542,7 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
      *
      * @return string
      */
-    private function encodeAppAuthorization(\Share_On_Twitter\Abraham\TwitterOAuth\Consumer $consumer) : string
+    private function encodeAppAuthorization(Consumer $consumer) : string
     {
         $key = \rawurlencode($consumer->key);
         $secret = \rawurlencode($consumer->secret);
@@ -539,5 +557,24 @@ class TwitterOAuth extends \Share_On_Twitter\Abraham\TwitterOAuth\Config
     private function curlCaOpt(string $path) : int
     {
         return \is_dir($path) ? \CURLOPT_CAPATH : \CURLOPT_CAINFO;
+    }
+    /**
+     * Set options for JSON Requests
+     *
+     * @param array $options
+     * @param array $postfields
+     * @param bool $json
+     *
+     * @return array
+     */
+    private function setPostfieldsOptions(array $options, array $postfields, bool $json) : array
+    {
+        if ($json) {
+            $options[\CURLOPT_HTTPHEADER][] = 'Content-type: application/json';
+            $options[\CURLOPT_POSTFIELDS] = \json_encode($postfields);
+        } else {
+            $options[\CURLOPT_POSTFIELDS] = Util::buildHttpQuery($postfields);
+        }
+        return $options;
     }
 }

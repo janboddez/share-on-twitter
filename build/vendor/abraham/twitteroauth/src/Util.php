@@ -51,8 +51,8 @@ class Util
         $parameters = [];
         foreach ($pairs as $pair) {
             $split = \explode('=', $pair, 2);
-            $parameter = \Share_On_Twitter\Abraham\TwitterOAuth\Util::urldecodeRfc3986($split[0]);
-            $value = isset($split[1]) ? \Share_On_Twitter\Abraham\TwitterOAuth\Util::urldecodeRfc3986($split[1]) : '';
+            $parameter = Util::urldecodeRfc3986($split[0]);
+            $value = isset($split[1]) ? Util::urldecodeRfc3986($split[1]) : '';
             if (isset($parameters[$parameter])) {
                 // We have already recieved parameter(s) with this name, so add to the list
                 // of parameters with this name
@@ -79,8 +79,8 @@ class Util
             return '';
         }
         // Urlencode both keys and values
-        $keys = \Share_On_Twitter\Abraham\TwitterOAuth\Util::urlencodeRfc3986(\array_keys($params));
-        $values = \Share_On_Twitter\Abraham\TwitterOAuth\Util::urlencodeRfc3986(\array_values($params));
+        $keys = Util::urlencodeRfc3986(\array_keys($params));
+        $values = Util::urlencodeRfc3986(\array_values($params));
         $params = \array_combine($keys, $values);
         // Parameters are sorted by name, using lexicographical byte value ordering.
         // Ref: Spec: 9.1.1 (1)

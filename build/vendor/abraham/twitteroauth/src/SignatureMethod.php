@@ -31,7 +31,7 @@ abstract class SignatureMethod
      *
      * @return string
      */
-    public abstract function buildSignature(\Share_On_Twitter\Abraham\TwitterOAuth\Request $request, \Share_On_Twitter\Abraham\TwitterOAuth\Consumer $consumer, \Share_On_Twitter\Abraham\TwitterOAuth\Token $token = null);
+    public abstract function buildSignature(Request $request, Consumer $consumer, Token $token = null);
     /**
      * Verifies that a given signature is correct
      *
@@ -42,7 +42,7 @@ abstract class SignatureMethod
      *
      * @return bool
      */
-    public function checkSignature(\Share_On_Twitter\Abraham\TwitterOAuth\Request $request, \Share_On_Twitter\Abraham\TwitterOAuth\Consumer $consumer, \Share_On_Twitter\Abraham\TwitterOAuth\Token $token, string $signature) : bool
+    public function checkSignature(Request $request, Consumer $consumer, Token $token, string $signature) : bool
     {
         $built = $this->buildSignature($request, $consumer, $token);
         // Check for zero length, although unlikely here

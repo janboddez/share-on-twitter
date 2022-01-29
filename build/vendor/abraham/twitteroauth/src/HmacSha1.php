@@ -14,7 +14,7 @@ namespace Share_On_Twitter\Abraham\TwitterOAuth;
  * character (ASCII code 38) even if empty.
  *   - Chapter 9.2 ("HMAC-SHA1")
  */
-class HmacSha1 extends \Share_On_Twitter\Abraham\TwitterOAuth\SignatureMethod
+class HmacSha1 extends SignatureMethod
 {
     /**
      * {@inheritDoc}
@@ -26,11 +26,11 @@ class HmacSha1 extends \Share_On_Twitter\Abraham\TwitterOAuth\SignatureMethod
     /**
      * {@inheritDoc}
      */
-    public function buildSignature(\Share_On_Twitter\Abraham\TwitterOAuth\Request $request, \Share_On_Twitter\Abraham\TwitterOAuth\Consumer $consumer, \Share_On_Twitter\Abraham\TwitterOAuth\Token $token = null) : string
+    public function buildSignature(Request $request, Consumer $consumer, Token $token = null) : string
     {
         $signatureBase = $request->getSignatureBaseString();
         $parts = [$consumer->secret, null !== $token ? $token->secret : ''];
-        $parts = \Share_On_Twitter\Abraham\TwitterOAuth\Util::urlencodeRfc3986($parts);
+        $parts = Util::urlencodeRfc3986($parts);
         $key = \implode('&', $parts);
         return \base64_encode(\hash_hmac('sha1', $signatureBase, $key, \true));
     }

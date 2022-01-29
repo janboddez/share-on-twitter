@@ -263,11 +263,11 @@ class Post_Handler {
 			return;
 		}
 
-		if ( empty( $this->options['twitter_access_token'] ) ) {
-			return;
-		}
+		// Not checking `twitter_access_token`, as it, at least theoretically,
+		// is possible to use just the app bearer token.
 
 		if ( empty( $this->options['twitter_access_token_secret'] ) ) {
+			// Either access token secret or bearer token.
 			return;
 		}
 
@@ -277,15 +277,26 @@ class Post_Handler {
 		$status .= ' ' . esc_url_raw( get_permalink( $post->ID ) );
 
 		$status = apply_filters( 'share_on_twitter_status', $status, $post );
-		$args   = apply_filters( 'share_on_twitter_tweet_args', array( 'status' => $status ), $post );
+
+		if ( $this->use_v2_api() ) {
+			$args = array( 'text' => $status );
+		} else {
+			$args = array( 'status' => $status );
+		}
+
+		$args = apply_filters( 'share_on_twitter_tweet_args', $args, $post );
 
 		if ( apply_filters( 'share_on_twitter_cutoff', false ) ) {
 			// May render hashtags or URLs, or unfiltered HTML, at the very end
 			// of a tweet unusable. Also, Twitter counts multibyte characters
 			// as multiple characters, so resulting strings may still be too
-			// long. Yet, using `substr()` could "break" Unicode characters,
-			// too, so ...
-			$args['status'] = mb_substr( $args['status'], 0, 278, get_bloginfo( 'charset' ) ) . ' …';
+			// long. Nevertheless, using `substr()` could "break" Unicode
+			// characters, too, so ... use at your own risk?
+			if ( $this->use_v2_api() && isset( $args['text'] ) ) {
+				$args['text'] = mb_strimwidth( $args['text'], 0, 280, '…', get_bloginfo( 'charset' ) );
+			} else {
+				$args['status'] = mb_strimwidth( $args['status'], 0, 280, '…', get_bloginfo( 'charset' ) );
+			}
 		}
 
 		// And now, images.
@@ -318,7 +329,7 @@ class Post_Handler {
 		$connection = new TwitterOAuth(
 			$this->options['twitter_api_key'],
 			$this->options['twitter_api_secret'],
-			$this->options['twitter_access_token'],
+			! empty( $this->options['twitter_access_token'] ) ? $this->options['twitter_access_token'] : null,
 			$this->options['twitter_access_token_secret']
 		);
 
@@ -341,29 +352,46 @@ class Post_Handler {
 		}
 
 		if ( ! empty( $media_ids ) ) {
-			$args['media_ids'] = implode( ',', $media_ids );
+			if ( $this->use_v2_api() ) {
+				$args['media'] = array( 'media_ids' => $media_ids );
+			} else {
+				$args['media_ids'] = implode( ',', $media_ids );
+			}
 		}
 
-		$response = $connection->post(
-			'statuses/update',
-			$args
-		);
+		if ( $this->use_v2_api() ) {
+			// Using the v2 API.
+			$connection->setApiVersion( '2' );
+			$response = $connection->post( 'tweets', $args, true );
 
-		if ( ! empty( $response->id_str ) && post_type_supports( $post->post_type, 'custom-fields' ) ) {
-			update_post_meta( $post->ID, '_share_on_twitter_id', $response->id_str );
-
-			if ( ! empty( $this->options['twitter_username'] ) ) {
-				update_post_meta( $post->ID, '_share_on_twitter_url', 'https://twitter.com/' . $this->options['twitter_username'] . '/status/' . $response->id_str );
+			if ( ! empty( $response->data->id ) ) {
+				$tweet_id = $response->data->id;
 			}
 		} else {
-			// Provided debugging's enabled, let's store the ( somehow faulty )
-			// response.
+			$response = $connection->post( 'statuses/update', $args );
+
+			if ( ! empty( $response->id_str ) ) {
+				$tweet_id = $response->id_str;
+			}
+		}
+
+		if ( empty( $tweet_id ) ) {
+			// Something went wrong.
 			error_log( print_r( $response, true ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions
+		} elseif ( post_type_supports( $post->post_type, 'custom-fields' ) ) {
+			update_post_meta( $post->ID, '_share_on_twitter_id', $tweet_id );
+
+			if ( ! empty( $this->options['twitter_username'] ) ) {
+				update_post_meta( $post->ID, '_share_on_twitter_url', 'https://twitter.com/' . $this->options['twitter_username'] . '/status/' . $tweet_id );
+			}
 		}
 	}
 
 	/**
-	 * Uploads an image and returns a ( single ) media ID.
+	 * Uploads an image and returns a (single) media ID.
+	 *
+	 * Supported only by the v1.1 API, which may require "Elevated access."
+	 * Works for images only.
 	 *
 	 * @since  0.1.0
 	 *
@@ -372,7 +400,7 @@ class Post_Handler {
 	 *
 	 * @return string|null Unique media ID, or nothing on failure.
 	 */
-	private function upload_image( $image_id, $connection ) {
+	protected function upload_image( $image_id, $connection ) {
 		$url   = '';
 		$image = wp_get_attachment_image_src( $image_id, 'large' );
 
@@ -388,7 +416,7 @@ class Post_Handler {
 
 		if ( ! is_file( $file_path ) ) {
 			// File doesn't seem to exist.
-			return;
+			return null;
 		}
 
 		$response = $connection->upload(
@@ -399,8 +427,8 @@ class Post_Handler {
 		);
 
 		if ( ! empty( $response->media_id_string ) ) {
-			// Add alt text.
-			// Looks like this isn't supported, yet, by TwitterOAuth.
+			// phpcs:disable
+			// Add alt text. Looks like TwitterOAuth does not support this, yet.
 			// $alt = get_post_meta( $image_id, '_wp_attachment_image_alt', true );
 			//
 			// $connection->post(
@@ -410,12 +438,29 @@ class Post_Handler {
 			// 		'alt_text' => array( 'text' => mb_substr( $alt, 0, 1000 ) ),
 			// 	)
 			// );
+			// phpcs:enable
 
 			return $response->media_id_string;
 		}
 
-		// Provided debugging's enabled, let's store the ( somehow faulty )
+		// Provided debugging's enabled, let's store the (somehow faulty)
 		// response.
 		error_log( print_r( $response, true ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions
+		return null;
+	}
+
+	/**
+	 * Whether the v2 API should be used.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @return bool Whether the v2 API should be used.
+	 */
+	protected function use_v2_api() {
+		if ( ! empty( $this->options['twitter_use_v2_api'] ) ) {
+			return true;
+		}
+
+		return false;
 	}
 }

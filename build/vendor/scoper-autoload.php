@@ -6,8 +6,8 @@ $loader = require_once __DIR__.'/autoload.php';
 
 // Aliases for the whitelisted classes. For more information see:
 // https://github.com/humbug/php-scoper/blob/master/README.md#class-whitelisting
-if (!class_exists('ComposerAutoloaderInit48f15077913018c856844478f3ed1d95', false)) {
-    class_exists('Share_On_Twitter\ComposerAutoloaderInit48f15077913018c856844478f3ed1d95');
+if (!class_exists('ComposerAutoloaderInit85185c3798a5be41c362892bae0b2db0', false) && !interface_exists('ComposerAutoloaderInit85185c3798a5be41c362892bae0b2db0', false) && !trait_exists('ComposerAutoloaderInit85185c3798a5be41c362892bae0b2db0', false)) {
+    spl_autoload_call('Share_On_Twitter\ComposerAutoloaderInit85185c3798a5be41c362892bae0b2db0');
 }
 
 return $loader;

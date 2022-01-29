@@ -30,6 +30,6 @@ class Token
      */
     public function __toString() : string
     {
-        return \sprintf('oauth_token=%s&oauth_token_secret=%s', \Share_On_Twitter\Abraham\TwitterOAuth\Util::urlencodeRfc3986($this->key), \Share_On_Twitter\Abraham\TwitterOAuth\Util::urlencodeRfc3986($this->secret));
+        return \sprintf('oauth_token=%s&oauth_token_secret=%s', Util::urlencodeRfc3986($this->key), Util::urlencodeRfc3986($this->secret));
     }
 }

@@ -24,6 +24,7 @@ class Options_Handler {
 		'twitter_access_token'        => '',
 		'twitter_access_token_secret' => '',
 		'twitter_username'            => '',
+		'twitter_use_v2_api'          => false,
 		'post_types'                  => array(),
 	);
 
@@ -32,7 +33,7 @@ class Options_Handler {
 	 *
 	 * @since 0.1.0
 	 *
-	 * @var array WordPress's default post types, minus "post" itself.
+	 * @var array Post types that should never be crossposted.
 	 */
 	const DEFAULT_POST_TYPES = array(
 		'page',
@@ -44,6 +45,11 @@ class Options_Handler {
 		'user_request',
 		'oembed_cache',
 		'wp_block',
+		'wp_template',
+		'wp_template_part',
+		'wp_global_styles',
+		'wp_navigation',
+		'genesis_custom_block', // Not default, but whatever.
 	);
 
 	/**
@@ -124,7 +130,7 @@ class Options_Handler {
 		}
 
 		if ( isset( $settings['twitter_username'] ) ) {
-			$this->options['twitter_username'] = $settings['twitter_username'];
+			$this->options['twitter_username'] = sanitize_text_field( $settings['twitter_username'] );
 		}
 
 		if ( isset( $settings['twitter_api_key'] ) ) {
@@ -141,6 +147,12 @@ class Options_Handler {
 
 		if ( isset( $settings['twitter_access_token_secret'] ) ) {
 			$this->options['twitter_access_token_secret'] = $settings['twitter_access_token_secret'];
+		}
+
+		$this->options['twitter_use_v2_api'] = false;
+
+		if ( isset( $settings['twitter_use_v2_api'] ) ) {
+			$this->options['twitter_use_v2_api'] = true;
 		}
 
 		// Updated settings.
@@ -170,7 +182,7 @@ class Options_Handler {
 				);
 				?>
 				<table class="form-table">
-				<tr valign="top">
+					<tr valign="top">
 						<th scope="row"><label for="share_on_twitter_settings[twitter_username]"><?php esc_html_e( 'Username', 'share-on-twitter' ); ?></label></th>
 						<td><input type="text" id="share_on_twitter_settings[twitter_username]" name="share_on_twitter_settings[twitter_username]" style="min-width: 33%;" value="<?php echo esc_attr( $this->options['twitter_username'] ); ?>" />
 						<p class="description"><?php esc_html_e( 'Your Twitter handle (without &ldquo;@&rdquo;).', 'share-on-twitter' ); ?></p></td>
@@ -195,6 +207,11 @@ class Options_Handler {
 							<?php printf( __( 'This plugin requires you sign up for a developer account over at %s, and register a new app with read + write access.', 'share_on_twitter' ), '<a href="https://developer.twitter.com/en/portal/dashboard">https://developer.twitter.com/en/portal/dashboard</a>' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?><br />
 							<?php esc_html_e( 'After doing so, you&rsquo;ll be given a set of secrets, which WordPress needs in order to talk to the Twitter API.', 'share_on_twitter' ); ?>
 						</td>
+					</tr>
+					<tr valign="top">
+						<th scope="row"><?php esc_html_e( 'Twitter API version', 'share-on-twitter' ); ?></th>
+						<td><label><input type="checkbox" name="share_on_twitter_settings[twitter_use_v2_api]" value="1" <?php checked( ! empty( $this->options['twitter_use_v2_api'] ) ); ?> /> <?php esc_html_e( 'Use Twitter’s API v2' ); ?></label>
+						<p class="description"><?php esc_html_e( 'Default to Twitter’s newer v2 API.', 'share-on-twitter' ); ?></p></td>
 					</tr>
 					<tr valign="top">
 						<th scope="row"><label for="share_on_twitter_settings[twitter_api_key]"><?php esc_html_e( 'API key', 'share-on-twitter' ); ?></label></th>
