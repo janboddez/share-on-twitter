@@ -9,4 +9,4 @@ While this is tedious, it's also the only way. Twitter requires client API keys 
 
 By default, Tweets contain only a title and permalink, but they can be fully customized using the various filter hooks. Automatic tagging, full-text status updates, or entire Tweet threads: everything's possible.
 
-The plugin will _soon_ allow you to choose between Twitter v2 API (which anyone has access to right away) and the older but default v1.1 API (which now requires Elevated access). Note, however, that image posting won't work without Elevated access. (Luckily, all it takes is you submitting second application form, which is typically processed instantly.)
+The plugin will _soon_ allow you to choose to use Twitter's v2 API (which anyone has access to right away) over the older v1.1 API (which now requires Elevated access). Note, however, that image posting won't work without Elevated access. (Luckily, all it takes is you submitting second application form, which is typically processed instantly.)
