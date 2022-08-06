@@ -427,18 +427,19 @@ class Post_Handler {
 		);
 
 		if ( ! empty( $response->media_id_string ) ) {
-			// phpcs:disable
-			// Add alt text. Looks like TwitterOAuth does not support this, yet.
-			// $alt = get_post_meta( $image_id, '_wp_attachment_image_alt', true );
-			//
-			// $connection->post(
-			// 	'media/metadata/create',
-			// 	array(
-			// 		'media_id' => $response->media_id_string,
-			// 		'alt_text' => array( 'text' => mb_substr( $alt, 0, 1000 ) ),
-			// 	)
-			// );
-			// phpcs:enable
+			// Add alt text.
+			$alt = get_post_meta( $image_id, '_wp_attachment_image_alt', true );
+
+			if ( '' !== $alt ) {
+				$connection->post(
+					'media/metadata/create',
+					array(
+						'media_id' => $response->media_id_string,
+						'alt_text' => array( 'text' => mb_substr( $alt, 0, 1000 ) ),
+					),
+					true // This is important!
+				);
+			}
 
 			return $response->media_id_string;
 		}

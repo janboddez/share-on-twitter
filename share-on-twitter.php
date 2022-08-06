@@ -9,7 +9,7 @@
  * License: GNU       General Public License v3
  * License URI:       http://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain:       share-on-twitter
- * Version:           0.2.0
+ * Version:           0.3.0
  *
  * @author  Jan Boddez <jan@janboddez.be>
  * @license http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0
